@@ -3,16 +3,58 @@ const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io')
 
+// Test database connection
+async function testDatabaseConnection() {
+  try {
+    const { PrismaClient } = require('@prisma/client')
+    const prisma = new PrismaClient()
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database connection timeout')), 5000)
+    )
+    
+    await Promise.race([prisma.$connect(), timeoutPromise])
+    console.log('✅ Database connection successful')
+    await prisma.$disconnect()
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message)
+    console.log('Continuing without database connection...')
+    // Don't exit the process, just log the error
+  }
+}
+
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = '0.0.0.0' // Listen on all network interfaces
 const port = process.env.PORT || 3000
+
+console.log('🚀 Starting Linker Platform Server...')
+console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
+console.log(`Port: ${port}`)
+console.log(`Hostname: ${hostname}`)
 
 // Create Next.js app
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
+  // Test database connection
+  await testDatabaseConnection()
   const httpServer = createServer((req, res) => {
+    // Handle health check directly
+    if (req.url === '/api/health' || req.url === '/') {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'Linker Platform',
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        env: process.env.NODE_ENV || 'development'
+      }))
+      return
+    }
+    
     const parsedUrl = parse(req.url, true)
     handle(req, res, parsedUrl)
   })
@@ -91,11 +133,17 @@ app.prepare().then(() => {
   })
 
   httpServer.listen(port, hostname, (err) => {
-    if (err) throw err
+    if (err) {
+      console.error('Failed to start server:', err)
+      process.exit(1)
+    }
     console.log(`> Ready on http://${hostname}:${port}`)
     console.log(`> Socket.io server running`)
     console.log(`> Your local IP: http://${getLocalIP()}:${port}`)
   })
+}).catch((err) => {
+  console.error('Failed to prepare Next.js app:', err)
+  process.exit(1)
 })
 
 // Helper function to get local IP address
