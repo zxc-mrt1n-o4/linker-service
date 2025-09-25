@@ -42,15 +42,12 @@ app.prepare().then(async () => {
   await testDatabaseConnection()
   const httpServer = createServer((req, res) => {
     // Handle health check directly
-    if (req.url === '/api/health' || req.url === '/') {
+    if (req.url === '/api/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ 
         status: 'ok', 
         timestamp: new Date().toISOString(),
-        service: 'Linker Platform',
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        env: process.env.NODE_ENV || 'development'
+        service: 'Linker Platform'
       }))
       return
     }
