@@ -5,7 +5,7 @@ const { Server } = require('socket.io')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = '0.0.0.0' // Listen on all network interfaces
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3000
 
 // Create Next.js app
 const app = next({ dev, hostname, port })
