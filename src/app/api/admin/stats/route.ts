@@ -27,6 +27,10 @@ export async function GET(request: NextRequest) {
 
     const stats = response.data
 
+    if (!stats) {
+      return NextResponse.json({ error: 'No statistics data available' }, { status: 500 })
+    }
+
     return NextResponse.json({
       users: {
         total: stats.users.total,

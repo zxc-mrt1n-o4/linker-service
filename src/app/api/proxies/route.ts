@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: response.error }, { status: 500 })
     }
 
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
+    }
+
     return NextResponse.json({ proxies: response.data.proxies })
 
   } catch (error) {
@@ -51,6 +55,10 @@ export async function POST(request: NextRequest) {
 
     if (response.error) {
       return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
     }
 
     return NextResponse.json({ proxy: response.data.proxy })

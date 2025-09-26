@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!createResponse.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
+    }
+
     const user = createResponse.data.user
 
     return NextResponse.json({

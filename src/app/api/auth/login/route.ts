@@ -72,6 +72,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    if (!loginResponse.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 });
+    }
+    
     // Reset rate limit on successful login
     resetRateLimit(ip, username);
     

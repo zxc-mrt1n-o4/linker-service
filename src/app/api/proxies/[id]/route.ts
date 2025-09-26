@@ -37,6 +37,10 @@ export async function PATCH(
       return NextResponse.json({ error: response.error }, { status: 500 })
     }
 
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
+    }
+
     return NextResponse.json({ proxy: response.data.proxy })
 
   } catch (error) {

@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: response.error }, { status: 500 })
     }
 
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
+    }
+
     return NextResponse.json({ issues: response.data.issues })
 
   } catch (error) {
@@ -64,6 +68,10 @@ export async function POST(request: NextRequest) {
 
     if (response.error) {
       return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
     }
 
     return NextResponse.json({ issue: response.data.issue })

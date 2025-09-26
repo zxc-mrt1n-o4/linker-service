@@ -23,10 +23,14 @@ export async function GET(request: NextRequest) {
     dbClient.setToken(token)
 
     // Get messages from external database API
-    const response = await dbClient.getMessages(limit, before)
+    const response = await dbClient.getMessages(limit, before || undefined)
     
     if (response.error) {
       return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
     }
 
     return NextResponse.json({
@@ -71,6 +75,10 @@ export async function POST(request: NextRequest) {
     
     if (response.error) {
       return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    if (!response.data) {
+      return NextResponse.json({ error: 'No data received' }, { status: 500 })
     }
 
     return NextResponse.json({ message: response.data.message })
