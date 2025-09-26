@@ -559,7 +559,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200/50">
-                    {users.map((userData) => (
+                    {users && users.length > 0 ? users.map((userData) => (
                       <tr key={userData.id} className="hover:bg-gray-50/50 transition-colors duration-200">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="font-medium text-gray-900">{userData.username}</div>
@@ -613,8 +613,8 @@ export default function AdminPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          <div>{userData._count.chatMessages} messages</div>
-                          <div>{userData._count.issues} issues</div>
+                          <div>{userData._count?.chatMessages || 0} messages</div>
+                          <div>{userData._count?.issues || 0} issues</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {formatDate(new Date(userData.createdAt))}
@@ -636,7 +636,13 @@ export default function AdminPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                          No users found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
