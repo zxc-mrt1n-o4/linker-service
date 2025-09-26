@@ -48,3 +48,39 @@ export async function PATCH(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const token = request.cookies.get('auth-token')?.value
+
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    const user = await getUserFromToken(token)
+    if (!user || user.status !== 'APPROVED' || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+    }
+
+    const { id } = await params
+
+    // Set token for database client
+    dbClient.setToken(token)
+
+    // Delete proxy using external database API
+    const response = await dbClient.deleteProxy(id)
+
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+
+  } catch (error) {
+    console.error('Delete proxy error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

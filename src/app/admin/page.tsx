@@ -41,22 +41,21 @@ interface User {
 
 interface Stats {
   users: {
-    byStatus: Array<{ status: string; _count: { id: number } }>
-    byRole: Array<{ role: string; _count: { id: number } }>
-    recentCount: number
+    total: number
+    pending: number
+    approved: number
   }
   issues: {
-    byStatus: Array<{ status: string; _count: { id: number } }>
-    byPriority: Array<{ priority: string; _count: { id: number } }>
-    recentCount: number
+    total: number
+    open: number
+    resolved: number
   }
   proxies: {
-    byType: Array<{ type: string; _count: { id: number } }>
-    byStatus: Array<{ status: string; _count: { id: number } }>
+    total: number
+    active: number
   }
   chat: {
     totalMessages: number
-    recentMessages: number
   }
 }
 
@@ -289,12 +288,6 @@ export default function AdminPage() {
     }
   }
 
-  const getStatValue = (statArray: Array<{ status?: string; role?: string; type?: string; _count: { id: number } }>, key: string) => {
-    const item = statArray.find(item => 
-      item.status === key || item.role === key || item.type === key
-    )
-    return item?._count.id || 0
-  }
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -436,13 +429,10 @@ export default function AdminPage() {
                   <div>
                     <p className="text-sm text-gray-600">Total Users</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {stats.users.byStatus.reduce((sum, item) => sum + item._count.id, 0)}
+                      {stats.users.total}
                     </p>
                   </div>
                   <Users className="w-8 h-8 text-blue-600" />
-                </div>
-                <div className="mt-4 text-sm text-green-600">
-                  +{stats.users.recentCount} this week
                 </div>
               </div>
 
@@ -451,7 +441,7 @@ export default function AdminPage() {
                   <div>
                     <p className="text-sm text-gray-600">Pending Approvals</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {getStatValue(stats.users.byStatus, 'PENDING')}
+                      {stats.users.pending}
                     </p>
                   </div>
                   <Clock className="w-8 h-8 text-yellow-600" />
@@ -463,13 +453,10 @@ export default function AdminPage() {
                   <div>
                     <p className="text-sm text-gray-600">Total Issues</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {stats.issues.byStatus.reduce((sum, item) => sum + item._count.id, 0)}
+                      {stats.issues.total}
                     </p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-                <div className="mt-4 text-sm text-green-600">
-                  +{stats.issues.recentCount} this week
                 </div>
               </div>
 
@@ -483,9 +470,6 @@ export default function AdminPage() {
                   </div>
                   <MessageCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <div className="mt-4 text-sm text-green-600">
-                  +{stats.chat.recentMessages} this week
-                </div>
               </div>
             </div>
 
@@ -494,26 +478,32 @@ export default function AdminPage() {
               <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 border border-gray-200/50">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">User Status Breakdown</h3>
                 <div className="space-y-3">
-                  {stats.users.byStatus.map((item) => (
-                    <div key={item.status} className="flex items-center justify-between">
-                      <span className="text-gray-600">{item.status}</span>
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                        {item._count.id}
-                      </span>
-                    </div>
-                  ))}
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Approved</span>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      {stats.users.approved}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Pending</span>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      {stats.users.pending}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 border border-gray-200/50">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Status Breakdown</h3>
                 <div className="space-y-3">
-                  {stats.issues.byStatus.map((item) => (
-                    <div key={item.status} className="flex items-center justify-between">
-                      <span className="text-gray-600">{item.status.replace('_', ' ')}</span>
-                      <span className="text-gray-900 font-medium">{item._count.id}</span>
-                    </div>
-                  ))}
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Open</span>
+                    <span className="text-gray-900 font-medium">{stats.issues.open}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Resolved</span>
+                    <span className="text-gray-900 font-medium">{stats.issues.resolved}</span>
+                  </div>
                 </div>
               </div>
             </div>

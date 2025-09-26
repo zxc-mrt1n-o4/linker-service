@@ -238,6 +238,12 @@ class DatabaseClient {
     })
   }
 
+  async deleteProxy(id: string) {
+    return this.request<{ success: boolean }>(`/api/proxies/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Admin methods
   async getStats() {
     return this.request<{
