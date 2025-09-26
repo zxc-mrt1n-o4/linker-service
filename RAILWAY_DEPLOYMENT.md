@@ -5,7 +5,7 @@
 Set these environment variables in your Railway project settings:
 
 ### Required Variables:
-- `DATABASE_URL` - PostgreSQL connection string (Railway provides this automatically)
+- `DB_API_URL` - Database API server URL (set to `https://linkerdb.up.railway.app`)
 - `JWT_SECRET` - A secure random string for JWT token signing
 - `NODE_ENV` - Set to "production"
 
@@ -20,15 +20,14 @@ Set these environment variables in your Railway project settings:
 
 ## Database Setup
 
-Railway will automatically provide a PostgreSQL database. The Prisma schema will be applied automatically during deployment.
+The application now uses an external database API server. The database server should be deployed separately and the `DB_API_URL` environment variable should point to the deployed database API.
 
 ## Build Process
 
 Railway will:
 1. Install dependencies (`npm ci`)
-2. Generate Prisma client (`prisma generate`)
-3. Build the Next.js application (`npm run build`)
-4. Start the server (`npm start`)
+2. Build the Next.js application (`npm run build`)
+3. Start the server (`npm start`)
 
 ## Health Check
 

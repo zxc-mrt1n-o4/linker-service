@@ -3,22 +3,19 @@ const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io')
 
-// Test database connection
+// Test database API connection
 async function testDatabaseConnection() {
   try {
-    const { PrismaClient } = require('@prisma/client')
-    const prisma = new PrismaClient()
+    const dbApiUrl = process.env.DB_API_URL || 'https://linkerdb.up.railway.app'
+    const response = await fetch(`${dbApiUrl}/api/health`)
     
-    // Add timeout to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database connection timeout')), 5000)
-    )
-    
-    await Promise.race([prisma.$connect(), timeoutPromise])
-    console.log('✅ Database connection successful')
-    await prisma.$disconnect()
+    if (response.ok) {
+      console.log('✅ Database API connection successful')
+    } else {
+      throw new Error(`Database API returned ${response.status}`)
+    }
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message)
+    console.error('❌ Database API connection failed:', error.message)
     console.log('Continuing without database connection...')
     // Don't exit the process, just log the error
   }
