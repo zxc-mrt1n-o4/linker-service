@@ -5,6 +5,11 @@ import { cloakConfig } from '@/config/cloak'
 
 export default function AboutBlankCloak() {
   useEffect(() => {
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') {
+      return
+    }
+
     // Check if we're in an iframe
     let inFrame
     try {
