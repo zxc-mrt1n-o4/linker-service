@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { verifyPassword, generateToken } from '@/lib/auth'
+import { dbClient } from '@/lib/db-client'
 import { sanitizeString, validateUsername, validatePassword } from '@/lib/validation'
 import { checkRateLimit, resetRateLimit } from '@/lib/rateLimit'
 
@@ -60,44 +59,23 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Find user - use a constant time query to prevent timing attacks
-    const user = await prisma.user.findUnique({
-      where: { username }
-    });
+    // Use external database API for login
+    const loginResponse = await dbClient.login(username, password);
     
-    // Always verify a password hash even if user doesn't exist (to prevent timing attacks)
-    const dummyHash = '$2a$12$K8GpVH3XlZfOoGjpU/x1r.8VKeztLrT1oWGYVy1uuO2GjYqQgXKLG';
-    const passwordToVerify = user?.password || dummyHash;
-    const isValidPassword = await verifyPassword(password, passwordToVerify);
-    
-    // Handle authentication failure
-    if (!user || !isValidPassword) {
+    if (loginResponse.error) {
       return NextResponse.json(
         { 
-          error: 'Invalid credentials',
+          error: loginResponse.error,
           remainingAttempts: rateLimit.remainingAttempts
         },
         { status: 401 }
       );
     }
     
-    // Check if user is approved
-    if (user.status !== 'APPROVED') {
-      let message = 'Account not approved yet';
-      if (user.status === 'REJECTED') message = 'Account has been rejected';
-      if (user.status === 'SUSPENDED') message = 'Account has been suspended';
-      
-      return NextResponse.json(
-        { error: message },
-        { status: 403 }
-      );
-    }
-    
     // Reset rate limit on successful login
     resetRateLimit(ip, username);
     
-    // Generate token
-    const token = generateToken(user.id);
+    const { token, user } = loginResponse.data;
     
     // Create response
     const response = NextResponse.json({

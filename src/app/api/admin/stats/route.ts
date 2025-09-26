@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { dbClient } from '@/lib/db-client'
 import { getUserFromToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -15,100 +15,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    // Get user statistics
-    const userStats = await prisma.user.groupBy({
-      by: ['status'],
-      _count: {
-        id: true
-      }
-    })
+    // Set token for database client
+    dbClient.setToken(token)
 
-    const roleStats = await prisma.user.groupBy({
-      by: ['role'],
-      _count: {
-        id: true
-      }
-    })
+    // Get statistics from external database API
+    const response = await dbClient.getStats()
+    
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
+    }
 
-    // Get issue statistics
-    const issueStats = await prisma.issue.groupBy({
-      by: ['status'],
-      _count: {
-        id: true
-      }
-    })
-
-    const priorityStats = await prisma.issue.groupBy({
-      by: ['priority'],
-      _count: {
-        id: true
-      }
-    })
-
-    // Get proxy statistics
-    const proxyStats = await prisma.proxyLink.groupBy({
-      by: ['type'],
-      _count: {
-        id: true
-      }
-    })
-
-    const proxyStatusStats = await prisma.proxyLink.groupBy({
-      by: ['status'],
-      _count: {
-        id: true
-      }
-    })
-
-    // Get chat message count
-    const totalMessages = await prisma.chatMessage.count()
-
-    // Get recent activity (last 7 days)
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-    const recentUsers = await prisma.user.count({
-      where: {
-        createdAt: {
-          gte: sevenDaysAgo
-        }
-      }
-    })
-
-    const recentIssues = await prisma.issue.count({
-      where: {
-        createdAt: {
-          gte: sevenDaysAgo
-        }
-      }
-    })
-
-    const recentMessages = await prisma.chatMessage.count({
-      where: {
-        createdAt: {
-          gte: sevenDaysAgo
-        }
-      }
-    })
+    const stats = response.data
 
     return NextResponse.json({
       users: {
-        byStatus: userStats,
-        byRole: roleStats,
-        recentCount: recentUsers
+        total: stats.users.total,
+        pending: stats.users.pending,
+        approved: stats.users.approved
       },
       issues: {
-        byStatus: issueStats,
-        byPriority: priorityStats,
-        recentCount: recentIssues
+        total: stats.issues.total,
+        open: stats.issues.open,
+        resolved: stats.issues.resolved
       },
       proxies: {
-        byType: proxyStats,
-        byStatus: proxyStatusStats
+        total: stats.proxies.total,
+        active: stats.proxies.active
       },
       chat: {
-        totalMessages,
-        recentMessages
+        totalMessages: stats.messages.total
       }
     })
 

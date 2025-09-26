@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
+import { dbClient } from '@/lib/db-client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,49 +13,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { username },
-          { phone },
-          ...(email ? [{ email }] : [])
-        ]
-      }
+    // Create user using external database API
+    const createResponse = await dbClient.createUser({
+      username,
+      password,
+      phone,
+      email,
+      role: 'USER'
     })
 
-    if (existingUser) {
+    if (createResponse.error) {
       return NextResponse.json(
-        { error: 'User with this username, phone, or email already exists' },
+        { error: createResponse.error },
         { status: 409 }
       )
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password)
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        phone,
-        email: email || null,
-        status: 'PENDING' // Requires admin approval
-      },
-      select: {
-        id: true,
-        username: true,
-        phone: true,
-        email: true,
-        status: true,
-        createdAt: true
-      }
-    })
+    const user = createResponse.data.user
 
     return NextResponse.json({
       message: 'Registration successful. Please wait for admin approval.',
-      user
+      user: {
+        id: user.id,
+        username: user.username,
+        phone: user.phone,
+        email: user.email,
+        status: user.status,
+        createdAt: user.createdAt
+      }
     })
 
   } catch (error) {

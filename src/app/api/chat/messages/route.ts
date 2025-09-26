@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { dbClient } from '@/lib/db-client'
 import { getUserFromToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -19,31 +19,19 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const before = searchParams.get('before') // For pagination
 
-    const where: any = {}
-    if (before) {
-      where.createdAt = {
-        lt: new Date(before)
-      }
+    // Set token for database client
+    dbClient.setToken(token)
+
+    // Get messages from external database API
+    const response = await dbClient.getMessages(limit, before)
+    
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
     }
 
-    const messages = await prisma.chatMessage.findMany({
-      where,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            role: true
-          }
-        }
-      }
-    })
-
     return NextResponse.json({
-      messages: messages.reverse(), // Reverse to show oldest first
-      hasMore: messages.length === limit
+      messages: response.data.messages,
+      hasMore: response.data.hasMore
     })
 
   } catch (error) {
@@ -75,23 +63,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message too long (max 1000 characters)' }, { status: 400 })
     }
 
-    const message = await prisma.chatMessage.create({
-      data: {
-        content: content.trim(),
-        userId: user.id
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            role: true
-          }
-        }
-      }
-    })
+    // Set token for database client
+    dbClient.setToken(token)
 
-    return NextResponse.json({ message })
+    // Create message using external database API
+    const response = await dbClient.createMessage(content.trim())
+    
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    return NextResponse.json({ message: response.data.message })
 
   } catch (error) {
     console.error('Send message error:', error)

@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { prisma } from './prisma'
+import { dbClient } from './db-client'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key'
 
@@ -28,16 +28,12 @@ export async function getUserFromToken(token: string) {
   const decoded = verifyToken(token)
   if (!decoded) return null
   
-  return await prisma.user.findUnique({
-    where: { id: decoded.userId },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      phone: true,
-      role: true,
-      status: true,
-      createdAt: true,
-    }
-  })
+  // Set token for database client
+  dbClient.setToken(token)
+  
+  // Get user from external database API
+  const response = await dbClient.verifyToken()
+  if (response.error || !response.data) return null
+  
+  return response.data.user
 }

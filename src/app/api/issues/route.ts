@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { dbClient } from '@/lib/db-client'
 import { getUserFromToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -15,48 +15,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const status = searchParams.get('status')
-    const skip = (page - 1) * limit
+    // Set token for database client
+    dbClient.setToken(token)
 
-    const where: any = {}
+    // Get issues from external database API
+    const response = await dbClient.getIssues()
     
-    // Regular users can only see their own issues
-    // if (user.role === 'USER') {
-    //   where.userId = user.id
-    // }
-    
-    // Filter by status if provided
-    if (status && ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].includes(status)) {
-      where.status = status
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
     }
 
-    const issues = await prisma.issue.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true
-          }
-        }
-      }
-    })
-
-    const total = await prisma.issue.count({ where })
-
-    return NextResponse.json({
-      issues,
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    })
+    return NextResponse.json({ issues: response.data.issues })
 
   } catch (error) {
     console.error('Get issues error:', error)
@@ -77,43 +46,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    const { title, description, priority } = await request.json()
+    const { title, description, priority = 'MEDIUM' } = await request.json()
 
     if (!title || !description) {
       return NextResponse.json({ error: 'Title and description are required' }, { status: 400 })
     }
 
-    if (title.length > 200) {
-      return NextResponse.json({ error: 'Title too long (max 200 characters)' }, { status: 400 })
-    }
+    // Set token for database client
+    dbClient.setToken(token)
 
-    if (description.length > 2000) {
-      return NextResponse.json({ error: 'Description too long (max 2000 characters)' }, { status: 400 })
-    }
-
-    const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
-    if (priority && !validPriorities.includes(priority)) {
-      return NextResponse.json({ error: 'Invalid priority' }, { status: 400 })
-    }
-
-    const issue = await prisma.issue.create({
-      data: {
-        title: title.trim(),
-        description: description.trim(),
-        priority: priority || 'MEDIUM',
-        userId: user.id
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true
-          }
-        }
-      }
+    // Create issue using external database API
+    const response = await dbClient.createIssue({
+      title,
+      description,
+      priority
     })
 
-    return NextResponse.json({ issue })
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
+    }
+
+    return NextResponse.json({ issue: response.data.issue })
 
   } catch (error) {
     console.error('Create issue error:', error)

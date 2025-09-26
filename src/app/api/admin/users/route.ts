@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { dbClient } from '@/lib/db-client'
 import { getUserFromToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -11,59 +11,21 @@ export async function GET(request: NextRequest) {
     }
 
     const user = await getUserFromToken(token)
-    if (!user || user.status !== 'APPROVED' || user.role === 'USER') {
+    if (!user || user.status !== 'APPROVED' || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const status = searchParams.get('status')
-    const role = searchParams.get('role')
-    const skip = (page - 1) * limit
+    // Set token for database client
+    dbClient.setToken(token)
 
-    const where: any = {}
+    // Get users from external database API
+    const response = await dbClient.getUsers()
     
-    if (status && ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status)) {
-      where.status = status
-    }
-    
-    if (role && ['USER', 'ADMIN', 'SUPER_ADMIN'].includes(role)) {
-      where.role = role
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: 500 })
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        phone: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: {
-            chatMessages: true,
-            issues: true
-          }
-        }
-      }
-    })
-
-    const total = await prisma.user.count({ where })
-
-    return NextResponse.json({
-      users,
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    })
+    return NextResponse.json({ users: response.data.users })
 
   } catch (error) {
     console.error('Get users error:', error)
