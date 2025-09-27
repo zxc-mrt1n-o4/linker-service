@@ -335,7 +335,7 @@ export default function ProxiesPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openInAboutBlank(proxy.url)}
-                        className="bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-800 transition-all duration-200 flex items-center space-x-2 text-sm"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center space-x-2 text-sm"
                       >
                         <span>Open in ab:blank</span>
                         <ExternalLink className="w-4 h-4" />
