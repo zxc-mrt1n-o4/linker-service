@@ -11,6 +11,9 @@ export default function AboutBlankCloak() {
     }
 
     const performCloaking = () => {
+      // Check if cloaking has already been attempted in this session
+      const cloakingAttempted = sessionStorage.getItem(cloakConfig.cloakingAttemptedKey) === "true";
+      
       // Check if we're in an iframe
       let inFrame
       try {
@@ -29,13 +32,16 @@ export default function AboutBlankCloak() {
         localStorage.setItem(cloakConfig.storageKey, cloakConfig.enabledByDefault ? "true" : "false")
       }
       
-      // Only run if not in an iframe, not in Firefox, not already in about:blank, and cloak is enabled
+      // Only run if not in an iframe, not in Firefox, not already in about:blank, not already attempted, and cloak is enabled
       if (
         !inFrame &&
         !isAboutBlank &&
+        !cloakingAttempted &&
         !navigator.userAgent.includes("Firefox") &&
         localStorage.getItem(cloakConfig.storageKey) === "true"
       ) {
+        // Mark that cloaking has been attempted for this session
+        sessionStorage.setItem(cloakConfig.cloakingAttemptedKey, "true");
         // Open about:blank popup
         const popup = window.open("about:blank", "_blank")
         
