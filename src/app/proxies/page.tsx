@@ -372,8 +372,8 @@ export default function ProxiesPage() {
             className="mb-12"
           >
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Globe className="w-5 h-5 text-blue-600" />
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Globe className="w-5 h-5 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Third Party Proxies</h2>
             </div>
@@ -386,17 +386,17 @@ export default function ProxiesPage() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <Globe className="w-5 h-5 text-blue-600" />
+                      <Globe className="w-5 h-5 text-purple-600" />
                       <h3 className="text-lg font-semibold text-gray-900">{proxy.name}</h3>
                     </div>
                     {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                       <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                           onClick={() => toggleProxyStatus(proxy.id, proxy.status)}
-                          className="p-1 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+                          className="p-1 hover:bg-purple-100 rounded-lg transition-colors duration-200"
                         >
                           {proxy.status === 'ACTIVE' ? (
-                            <Eye className="w-4 h-4 text-blue-600" />
+                            <Eye className="w-4 h-4 text-purple-600" />
                           ) : (
                             <EyeOff className="w-4 h-4 text-gray-400" />
                           )}
@@ -419,7 +419,7 @@ export default function ProxiesPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openInAboutBlank(proxy.url)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 text-sm"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center space-x-2 text-sm"
                       >
                         <span>Open in ab:blank</span>
                         <ExternalLink className="w-4 h-4" />
