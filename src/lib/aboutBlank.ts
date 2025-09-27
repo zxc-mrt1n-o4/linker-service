@@ -77,31 +77,9 @@ export function openInAboutBlank(url: string): void {
   `;
   win.document.head.appendChild(script);
 
-  // Add reload overlay functionality with session storage
+  // Add reload overlay functionality
   const reloadScript = win.document.createElement('script');
   reloadScript.textContent = `
-    // Session storage management for about:blank
-    function syncSessionStorage() {
-      try {
-        // Get all session storage from parent window
-        const parentStorage = window.opener ? window.opener.sessionStorage : null;
-        if (parentStorage) {
-          // Copy all session storage items to current window
-          for (let i = 0; i < parentStorage.length; i++) {
-            const key = parentStorage.key(i);
-            if (key) {
-              sessionStorage.setItem(key, parentStorage.getItem(key));
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Could not sync session storage:', e);
-      }
-    }
-    
-    // Sync session storage on load
-    syncSessionStorage();
-    
     // Create reload overlay
     function createReloadOverlay() {
       const overlay = document.createElement('div');
@@ -139,8 +117,6 @@ export function openInAboutBlank(url: string): void {
       overlay.addEventListener('click', function() {
         const iframe = document.querySelector('iframe');
         if (iframe) {
-          // Sync session storage before reload
-          syncSessionStorage();
           iframe.src = iframe.src;
         }
       });
@@ -176,8 +152,6 @@ export function openInAboutBlank(url: string): void {
         e.preventDefault();
         const iframe = document.querySelector('iframe');
         if (iframe) {
-          // Sync session storage before reload
-          syncSessionStorage();
           iframe.src = iframe.src;
         }
       }
@@ -186,15 +160,10 @@ export function openInAboutBlank(url: string): void {
         e.preventDefault();
         const iframe = document.querySelector('iframe');
         if (iframe) {
-          // Sync session storage before reload
-          syncSessionStorage();
           iframe.src = iframe.src;
         }
       }
     });
-    
-    // Periodic session storage sync (every 5 seconds)
-    setInterval(syncSessionStorage, 5000);
   `;
   win.document.head.appendChild(reloadScript);
 }
