@@ -14,8 +14,8 @@ export default function ShutdownCountdown() {
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
-    // September 30th, 2024 at 11:59 PM EDT (end of fiscal year)
-    const shutdownDate = new Date('2024-09-30T23:59:59-04:00').getTime()
+    // September 30th, 2025 at 11:59 PM EDT (end of fiscal year)
+    const shutdownDate = new Date('2025-09-30T23:59:59-04:00').getTime()
 
     const updateCountdown = () => {
       const now = new Date().getTime()
