@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import ShutdownCountdown from '@/components/ShutdownCountdown'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
@@ -138,13 +139,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-gray-50 rounded-2xl shadow-lg p-8 w-full max-w-md border border-gray-100"
-      >
+    <div className="min-h-screen bg-white">
+      <ShutdownCountdown />
+      <div className="flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gray-50 rounded-2xl shadow-lg p-8 w-full max-w-md border border-gray-100"
+        >
         <div className="text-center mb-8">
           <motion.h1 
             initial={{ opacity: 0 }}
@@ -273,7 +276,8 @@ export default function LoginPage() {
             </Link>
           </p>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
+import ShutdownCountdown from '@/components/ShutdownCountdown'
 import { motion } from 'framer-motion'
 import { MessageCircle, AlertTriangle, Link2, Users } from 'lucide-react'
 import Link from 'next/link'
@@ -19,6 +20,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      <ShutdownCountdown />
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
